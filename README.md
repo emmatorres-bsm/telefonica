@@ -1,40 +1,24 @@
-# telefonica
-Este proyecto tiene como objetivo desarrollar un sistema de clasificación capaz de distinguir entre voces humanas reales (bonafide) y ataques generados mediante inteligencia artificial (voces sintéticas). El desarrollo se ha dividido en tres fases experimentales, cada una documentada en su respectivo notebook.
+# Escudo Antifraude: Detección de deepfakes para Telefónica
+Este proyecto tiene como objetivo desarrollar un sistema de clasificación capaz de distinguir entre voces humanas reales (bonafide) y ataques generados mediante inteligencia artificial (voces sintéticas). El desarrollo se ha dividido en tres fases experimentales, cada una documentada en su respectivo cuaderno de notas, evolucionando desde un enfoque teórico inicial hasta la consolidación de un producto tecnológico optimizado y empaquetado para entornos de producción masivos.
 
-Estructura del Proyecto
-Notebook 1: Extracción de Características y Modelos Base (Fase 1)
-En la etapa inicial, el foco se centró en la ingeniería de características y la creación de una línea base de clasificación.
+**Infraestructura de Datos y Almacenamiento**
+Debido al volumen masivo de los archivos de audio y por motivos de eficiencia en la gestión del repositorio, las bases de datos y los archivos estructurados no se encuentran alojados directamente en GitHub. Toda la información analítica y las muestras se gestionan de forma segura a través de una carpeta compartida en Google Drive corporativo.
 
-Procesamiento: Se transformaron los archivos de audio en coeficientes cepstrales en las frecuencias de Mel (MFCC), capturando la huella acústica única de cada muestra.
+Esta infraestructura compartida contiene la carpeta original de la Logical Access (LA) con las particiones de datos originales del proyecto denominadas dev, train y eval. Asimismo, este espacio en la nube almacena los archivos CSV resultantes de las extracciones masivas de características acústicas, permitiendo que los cuadernos de ejecución carguen la información de manera ágil sin necesidad de realizar el procesamiento de audio en cada sesión.
 
-Entrenamiento: Se evaluaron modelos iniciales como la Regresión Logística utilizando un conjunto de datos controlado.
+**Desarrollo de las Fases del Proyecto**
+**Fase 1:** Extracción de Características y Modelos Base
+En la etapa inicial, el foco del proyecto se centró en la ingeniería de características y la creación de una línea base de clasificación. Durante el procesamiento, transformamos los archivos de audio crudos en coeficientes cepstrales en las frecuencias de Mel (MFCC) para capturar la huella acústica única de cada muestra. En el entrenamiento, evaluamos modelos iniciales como la Regresión Logística utilizando un conjunto de datos controlado. Como resultado, establecimos una base técnica sólida, aunque el modelo resultante mostraba una rigidez excesiva que dificultaba la detección en entornos más dinámicos o complejos.
 
-Resultado: Se estableció una base técnica sólida, aunque el modelo mostraba una rigidez excesiva que dificultaba la detección en entornos más complejos.
+**Fase 2:** Evaluación y Detección de Sesgos
+El segundo cuaderno se dedicó a la validación del sistema frente a datos externos para medir su rendimiento en condiciones más realistas utilizando el dataset EVAL. Al evaluar con datos reales, detectamos un conflicto operativo crítico, ya que el modelo actuaba de forma demasiado estricta y bloqueaba a demasiados usuarios legítimos. Tras el análisis, identificamos que el origen del problema residía en la escasez del volumen total de muestras de entrenamiento; aunque implementamos estrategias de balanceo, el algoritmo no lograba aprender la variabilidad real de la voz humana, generando una tasa inaceptable de falsos positivos y clasificando erróneamente a clientes verdaderos como fraude.
 
-Notebook 2: Evaluación y Detección de Sesgos (Fase 2)
-El segundo notebook se dedica a la validación del sistema frente a datos externos (dataset EVAL) para medir su rendimiento en condiciones más realistas.
+**Fase 3:** Rebalanceo, Selección de SVM y Optimización Final
+La tercera fase representa la etapa de madurez del proyecto, donde resolvimos el conflicto inyectando masivamente muestras reales en el entrenamiento bajo una estrategia de balanceo sesgada al sesenta cuarenta para flexibilizar el sistema. Llevamos a cabo una competencia de modelos entre Regresión Logística, Random Forest, XGBoost y Support Vector Machine, resultando ganador este último con un Kernel RBF debido a su superioridad matemática para separar los datos espaciales. En el test blindado final, el modelo alcanzó una Balanced Accuracy del 80.93% y logró rescatar al 82.30% de los usuarios legítimos.
 
-Conflicto detectado: Al evaluar con datos reales, se observó que el modelo bloqueaba a demasiados usuarios legítimos (falsos positivos).
+Tras consolidar el algoritmo, iniciamos una fase de doble optimización. En primer lugar, realizamos un estudio de poda de características mediante importancia por permutación, determinando que es posible reducir el vector de entrada a solo 4 variables clave de los coeficientes MFCC, manteniendo un rendimiento robusto del 77.50% pero disminuyendo drásticamente la latencia en el servidor. En segundo lugar, auditamos el volumen de las filas mediante una Curva de Aprendizaje con validación cruzada; este análisis demostró visualmente que ambas curvas de rendimiento convergen en horizontal, confirmando que el modelo ha alcanzado su techo técnico de madurez y que Telefónica no necesita invertir recursos adicionales en recopilar o etiquetar más datos de entrenamiento.
 
-Análisis: Se identificó la necesidad de rebalancear el entrenamiento, ya que el modelo estaba demasiado especializado en detectar fraude y era incapaz de reconocer la variabilidad de la voz humana real.
+**Entregable Final y Tecnologías**
+Como cierre definitivo del proyecto, el sistema optimizado de 4 variables ha sido materializado en un producto final empaquetado. Hemos exportado el clasificador mediante la librería Joblib en un archivo físico denominado escudo_antifraude_v3_ligero.joblib, ubicado en el repositorio. Este archivo binario integra de forma conjunta el modelo SVM entrenado, el escalador de datos y la configuración de variables necesarias, quedando listo como una solución llave en mano para ser integrada directamente en la centralita de Telefónica para realizar inferencias ligeras y veloces en tiempo real.
 
-Notebook 3: Rebalanceo, Selección de SVM y Optimización (Fase 3)
-El último notebook representa la fase de madurez del proyecto, donde se alcanza el equilibrio entre seguridad y accesibilidad.
-
-Estrategia 60/40: Se reconstruyó el dataset de entrenamiento inyectando muestras reales de EVAL para flexibilizar el modelo.
-
-Competencia de Modelos: Se compararon algoritmos de Regresión Logística, Random Forest, XGBoost y SVM. El SVM con Kernel RBF resultó ganador al liderar todas las métricas.
-
-Resultados Finales: En el test blindado, el modelo alcanzó una Balanced Accuracy del 80.93%, logrando rescatar al 82.30% de los usuarios legítimos.
-
-Poda de Características: Se realizó un estudio de importancia por permutación para aligerar el modelo. Se determinó que es posible reducir el sistema a solo 4 variables clave, manteniendo un rendimiento robusto (77.50%) pero con un coste computacional mucho menor.
-
-Conclusiones Técnicas
-El proyecto concluye que la proyección dimensional del SVM RBF es la tecnología más eficaz para este problema. La optimización final permite a Telefónica desplegar un sistema ágil que no solo protege contra el fraude sintético, sino que garantiza una experiencia fluida para el cliente real al minimizar los bloqueos innecesarios.
-
-Tecnologías Utilizadas
-Lenguaje: Python 3.x
-
-Librerías principales: Scikit-learn, Pandas, NumPy, XGBoost, Matplotlib y Seaborn.
-
-Entorno: Google Colab con integración de Google Drive para la gestión de datasets masivos.
+Para la construcción de todo este ecosistema tecnológico hemos utilizado el lenguaje de programación Python en su versión 3, apoyándonos en librerías científicas de referencia como Scikit-learn para el modelado, Pandas y NumPy para la manipulación analítica, XGBoost para la evaluación algorítmica, junto con Matplotlib y Seaborn para el desarrollo de las interfaces gráficas. Todo el entorno de desarrollo se ha unificado en Google Colab aprovechando su compatibilidad nativa con el almacenamiento de Google Drive.
